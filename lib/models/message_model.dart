@@ -21,6 +21,8 @@ class MessageModel {
     required this.read,
   });
 
+  bool get isRead => read;
+
   Map<String, dynamic> toFirestore() {
     return {
       'id': id,

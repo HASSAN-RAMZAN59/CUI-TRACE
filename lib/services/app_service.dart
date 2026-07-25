@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/cloudinary_services.dart';
 import '../models/item_model.dart';
 import '../models/user_model.dart';
+import '../models/message_model.dart';
 
 class AppService {
   final CloudinaryService _cloudinaryService = CloudinaryService();
@@ -519,25 +520,29 @@ class AppService {
   Future<void> sendMessage({
     required String chatId,
     required String senderId,
-    required String message,
+    String? senderName,
+    required String text,
   }) async {
     final msg = {
       'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'chatId': chatId,
       'senderId': senderId,
-      'message': message,
+      'text': text,
       'timestamp': DateTime.now(),
       'read': false,
     };
     _messagesStore.putIfAbsent(chatId, () => []).insert(0, msg);
     final idx = _chatsStore.indexWhere((c) => c['id'] == chatId);
     if (idx != -1) {
-      _chatsStore[idx]['lastMessage'] = message;
+      _chatsStore[idx]['lastMessage'] = text;
       _chatsStore[idx]['lastMessageTime'] = DateTime.now();
     }
   }
 
-  Stream<List<Map<String, dynamic>>> getChatMessagesStream(String chatId) {
-    return Stream.value(_messagesStore[chatId] ?? []);
+  Stream<List<MessageModel>> getChatMessagesStream(String chatId) {
+    final rawList = _messagesStore[chatId] ?? [];
+    final list = rawList.map((m) => MessageModel.fromFirestore(m)).toList();
+    return Stream.value(list);
   }
 
   Stream<List<Map<String, dynamic>>> getUserChatsStream(String userId) {
