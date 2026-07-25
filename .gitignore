@@ -7,7 +7,15 @@ ios/Flutter/Flutter.framework
 ios/Flutter/App.framework
 ios/Flutter/Generated.xcconfig
 ios/Flutter/flutter_export_environment.sh
-# Sensitive files
+
+# Sensitive & virtualenv files
 android/app/google-services.json
 lib/firebase_options.dart
 firebase.json
+backend/venv/
+backend/.env
+
+# Python bytecode & cache
+__pycache__/
+*.pyc
+backend/__pycache__/
