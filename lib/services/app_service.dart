@@ -1,7 +1,7 @@
 // services/app_service.dart
 import 'dart:async';
 import 'dart:io';
-import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/cloudinary_services.dart';
 import '../models/item_model.dart';
@@ -10,7 +10,7 @@ import '../models/message_model.dart';
 
 class AppService {
   final CloudinaryService _cloudinaryService = CloudinaryService();
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   static UserModel? _currentUser;
   static final List<ItemModel> _itemsStore = [];
@@ -94,38 +94,40 @@ class AppService {
 
   // ===================== GOOGLE SIGN-IN =====================
   Future<UserModel?> signInWithGoogle() async {
-    try {
-      print('🔐 Starting Google Sign-In...');
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        print('❌ Google Sign-In cancelled');
-        return null;
-      }
-
-      final userId = googleUser.id;
-      final userModel = UserModel(
-        id: userId,
-        email: googleUser.email,
-        username: googleUser.email.split('@').first,
-        displayName: googleUser.displayName ?? googleUser.email.split('@').first,
-        fcmToken: '',
-        createdAt: DateTime.now(),
-        lastLogin: DateTime.now(),
-        isEmailVerified: true,
-      );
-
-      _currentUser = userModel;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('current_user_id', userId);
-      await prefs.setString('current_user_email', googleUser.email);
-      await prefs.setString('current_user_name', userModel.displayName);
-
-      print('✅ Google Sign-In successful: ${userModel.id}');
-      return userModel;
-    } catch (e) {
-      print("❌ Google Sign-In Error: $e");
-      return null;
-    }
+    // print('🔐 Google Sign-In is disabled');
+    // try {
+    //   print('🔐 Starting Google Sign-In...');
+    //   final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+    //   if (googleUser == null) {
+    //     print('❌ Google Sign-In cancelled');
+    //     return null;
+    //   }
+    //
+    //   final userId = googleUser.id;
+    //   final userModel = UserModel(
+    //     id: userId,
+    //     email: googleUser.email,
+    //     username: googleUser.email.split('@').first,
+    //     displayName: googleUser.displayName ?? googleUser.email.split('@').first,
+    //     fcmToken: '',
+    //     createdAt: DateTime.now(),
+    //     lastLogin: DateTime.now(),
+    //     isEmailVerified: true,
+    //   );
+    //
+    //   _currentUser = userModel;
+    //   final prefs = await SharedPreferences.getInstance();
+    //   await prefs.setString('current_user_id', userId);
+    //   await prefs.setString('current_user_email', googleUser.email);
+    //   await prefs.setString('current_user_name', userModel.displayName);
+    //
+    //   print('✅ Google Sign-In successful: ${userModel.id}');
+    //   return userModel;
+    // } catch (e) {
+    //   print("❌ Google Sign-In Error: $e");
+    //   return null;
+    // }
+    return null;
   }
 
   // ===================== NOTIFICATION FUNCTIONS =====================

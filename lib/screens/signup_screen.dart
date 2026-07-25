@@ -89,28 +89,26 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-  Future<void> _googleSignup() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final user = await _authService.signInWithGoogle();
-
-      if (user != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isLoggedIn', true);
-        await prefs.setString('userId', user.id);
-        await prefs.setString('email', user.email);
-        await prefs.setString('displayName', user.displayName);
-        await prefs.setString('username', user.username);
-
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      _showSnackBar('Google Sign-In failed: $e', isError: true);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
+  // Future<void> _googleSignup() async {
+  //   // Google Sign-In temporarily disabled
+  //   // setState(() => _isLoading = true);
+  //   // try {
+  //   //   final user = await _authService.signInWithGoogle();
+  //   //   if (user != null) {
+  //   //     final prefs = await SharedPreferences.getInstance();
+  //   //     await prefs.setBool('isLoggedIn', true);
+  //   //     await prefs.setString('userId', user.id);
+  //   //     await prefs.setString('email', user.email);
+  //   //     await prefs.setString('displayName', user.displayName);
+  //   //     await prefs.setString('username', user.username);
+  //   //     Navigator.pushReplacementNamed(context, '/home');
+  //   //   }
+  //   // } catch (e) {
+  //   //   _showSnackBar('Google Sign-In failed: $e', isError: true);
+  //   // } finally {
+  //   //   if (mounted) setState(() => _isLoading = false);
+  //   // }
+  // }
 
   void _showSnackBar(String message, {bool isError = false}) {
     if (mounted) {
@@ -378,7 +376,8 @@ class _SignupScreenState extends State<SignupScreen> {
               SizedBox(
                 height: 50,
                 child: OutlinedButton.icon(
-                  onPressed: _isLoading ? null : _googleSignup,
+                  // onPressed: _isLoading ? null : _googleSignup,
+                  onPressed: null,
                   icon: Image.network(
                     "https://cdn-icons-png.flaticon.com/512/2991/2991148.png",
                     height: 24,

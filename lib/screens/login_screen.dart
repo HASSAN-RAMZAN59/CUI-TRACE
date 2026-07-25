@@ -113,27 +113,26 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  Future<void> _googleLogin() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final user = await _authService.signInWithGoogle();
-
-      if (user != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isLoggedIn', true);
-        await prefs.setString('userId', user.id);
-        await prefs.setString('email', user.email);
-        await prefs.setString('displayName', user.displayName);
-        await prefs.setString('username', user.username);
-        _navigateToHome();
-      }
-    } catch (e) {
-      _showErrorSnackBar("Google Sign-In failed: $e");
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
+  // Future<void> _googleLogin() async {
+  //   // Google Sign-In temporarily disabled
+  //   // setState(() => _isLoading = true);
+  //   // try {
+  //   //   final user = await _authService.signInWithGoogle();
+  //   //   if (user != null) {
+  //   //     final prefs = await SharedPreferences.getInstance();
+  //   //     await prefs.setBool('isLoggedIn', true);
+  //   //     await prefs.setString('userId', user.id);
+  //   //     await prefs.setString('email', user.email);
+  //   //     await prefs.setString('displayName', user.displayName);
+  //   //     await prefs.setString('username', user.username);
+  //   //     _navigateToHome();
+  //   //   }
+  //   // } catch (e) {
+  //   //   _showErrorSnackBar("Google Sign-In failed: $e");
+  //   // } finally {
+  //   //   if (mounted) setState(() => _isLoading = false);
+  //   // }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -343,7 +342,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return SizedBox(
       height: 50,
       child: OutlinedButton.icon(
-        onPressed: _isLoading ? null : _googleLogin,
+        // onPressed: _isLoading ? null : _googleLogin,
+        onPressed: null,
         icon: Image.network(
           "https://cdn-icons-png.flaticon.com/512/2991/2991148.png",
           height: 24,
