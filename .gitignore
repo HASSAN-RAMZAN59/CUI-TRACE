@@ -7,7 +7,7 @@ ios/Flutter/Flutter.framework
 ios/Flutter/App.framework
 ios/Flutter/Generated.xcconfig
 ios/Flutter/flutter_export_environment.sh
-# Firebase sensitive files
+# Sensitive files
 android/app/google-services.json
 lib/firebase_options.dart
 firebase.json
