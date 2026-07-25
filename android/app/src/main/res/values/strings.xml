@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- For Google services -->
+    <integer name="google_play_services_version">12451000</integer>
+
+    <!-- Optional: Notification color -->
+    <color name="notification_color">#FF3D5A</color>
+</resources>
