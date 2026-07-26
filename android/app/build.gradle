@@ -28,7 +28,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.example.lost_found_app"
+    namespace "com.example.cui_trace"
     compileSdk 34
     ndkVersion flutter.ndkVersion
 
@@ -43,7 +43,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.lost_found_app"
+        applicationId "com.example.cui_trace"
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
@@ -53,7 +53,7 @@ android {
 
         // Google Sign-In redirect
         manifestPlaceholders = [
-                'appAuthRedirectScheme': 'com.example.lost_found_app'
+                'appAuthRedirectScheme': 'com.example.cui_trace'
         ]
     }
 

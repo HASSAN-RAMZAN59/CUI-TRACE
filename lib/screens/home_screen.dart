@@ -351,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                         const Text(
-                          'Lost & Found Hub',
+                          'CUI Trace',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 20,

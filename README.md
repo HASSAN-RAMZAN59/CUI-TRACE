@@ -1,4 +1,4 @@
-# lost_found_app
+# cui_trace
 
 A new Flutter project.
 

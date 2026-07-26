@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.lost_found_app">
+    package="com.example.cui_trace">
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -15,7 +15,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
-        android:label="Lost and Found Hub"
+        android:label="CUI Trace"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"
         android:theme="@style/LaunchTheme"
@@ -47,7 +47,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.example.lost_found_app" />
+                <data android:scheme="com.example.cui_trace" />
             </intent-filter>
         </activity>
 

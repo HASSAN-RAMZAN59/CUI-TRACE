@@ -1,5 +1,5 @@
-name: lost_found_app
-description: "Lost & Found App for COMSATS University"
+name: cui_trace
+description: "CUI Trace App for COMSATS University"
 publish_to: 'none'
 version: 2.0.0+1
 

@@ -211,7 +211,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      title: 'Lost & Found Hub',
+      title: 'CUI Trace',
       theme: ThemeData(
         useMaterial3: false,
         primarySwatch: Colors.blue,

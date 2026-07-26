@@ -1,4 +1,4 @@
-package com.example.lost_found_app
+package com.example.cui_trace
 
 import io.flutter.embedding.android.FlutterActivity
 import androidx.core.view.WindowCompat

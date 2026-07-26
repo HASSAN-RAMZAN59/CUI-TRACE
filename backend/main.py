@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="CUI Trace Backend API",
-    description="FastAPI & MongoDB Atlas Backend for Lost & Found App",
+    description="FastAPI & MongoDB Atlas Backend for CUI Trace App",
     version="1.0.0",
     lifespan=lifespan
 )

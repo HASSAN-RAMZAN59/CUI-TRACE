@@ -16,7 +16,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, dynamic>> _pages = [
     {
-      'title': 'Welcome to CUI Lost & Found',
+      'title': 'Welcome to CUI Trace',
       'subtitle': 'Find lost items or report found items quickly and securely.',
       'image': Icons.find_in_page,
       'color': Colors.blue,

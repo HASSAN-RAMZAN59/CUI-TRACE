@@ -29,7 +29,7 @@ class CloudinaryService {
       return null;
     }
   }
-  Future<String> uploadImage(dynamic imageSource, {String folder = 'lost_and_found'}) async {
+  Future<String> uploadImage(dynamic imageSource, {String folder = 'cui_trace'}) async {
     try {
       print('📤 Uploading image to Cloudinary...');
 

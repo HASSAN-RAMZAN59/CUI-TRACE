@@ -1,6 +1,6 @@
 // utils/constants.dart - UPDATED
 class AppConstants {
-  static const String appName = 'Lost & Found Hub';
+  static const String appName = 'CUI Trace';
   static const String appVersion = '1.0.0';
 
   // App Collections

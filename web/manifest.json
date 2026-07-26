@@ -1,11 +1,11 @@
 {
-    "name": "Lost & Found Hub",
-    "short_name": "LostFound",
+    "name": "CUI Trace",
+    "short_name": "CuiTrace",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#2196F3",
     "theme_color": "#2196F3",
-    "description": "Lost and Found items management system for COMSATS University",
+    "description": "CUI Trace items management system for COMSATS University",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

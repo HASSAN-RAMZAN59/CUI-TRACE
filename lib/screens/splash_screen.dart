@@ -105,7 +105,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Lost & Found',
+              'CUI Trace',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
