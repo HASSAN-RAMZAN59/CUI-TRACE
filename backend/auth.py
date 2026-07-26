@@ -4,7 +4,7 @@ from datetime import datetime
 from bson import ObjectId
 
 from database import users_collection
-from models import UserSignup, UserLogin, UserResponse, TokenResponse
+from models import UserSignup, UserLogin, UserResponse, TokenResponse, UserProfileUpdate
 from security import verify_password, get_password_hash, create_access_token, decode_access_token
 
 router = APIRouter(prefix="/api", tags=["Authentication"])
