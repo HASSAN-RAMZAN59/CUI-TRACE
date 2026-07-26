@@ -3,12 +3,20 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
+  /// Optional custom override URL (e.g., Render cloud URL or custom IP like 'http://192.168.1.50:8000')
+  /// Set this to point the app to a hosted server or physical device IP.
+  static String? customBaseUrl;
+
   // Automatically select host according to platform
   static String get baseUrl {
+    if (customBaseUrl != null && customBaseUrl!.isNotEmpty) {
+      return customBaseUrl!;
+    }
     if (kIsWeb) {
       return 'http://127.0.0.1:8000';
     } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8000';
+      // 192.168.18.35 is your PC local Wi-Fi IP address so physical mobile phone can reach backend
+      return 'http://192.168.18.35:8000';
     } else {
       return 'http://127.0.0.1:8000';
     }

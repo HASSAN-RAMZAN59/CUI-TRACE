@@ -28,10 +28,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS Middleware for Flutter App integration
+# Configure CORS Middleware for Flutter App integration (Web, Android, iOS, Desktop)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

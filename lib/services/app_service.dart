@@ -692,7 +692,7 @@ class AppService {
   }
 
   Stream<List<MessageModel>> getChatMessagesStream(String chatId) {
-    return Stream.fromFuture(() async {
+    Future<List<MessageModel>> fetchMessages() async {
       try {
         final token = await _getToken();
         final response = await http.get(
@@ -707,11 +707,13 @@ class AppService {
         print('Error fetching chat messages: $e');
       }
       return [];
-    }());
+    }
+
+    return Stream.fromFuture(fetchMessages());
   }
 
   Stream<List<Map<String, dynamic>>> getUserChatsStream(String userId) {
-    return Stream.fromFuture(() async {
+    Future<List<Map<String, dynamic>>> fetchUserChats() async {
       try {
         final token = await _getToken();
         final response = await http.get(
@@ -739,7 +741,9 @@ class AppService {
         print('Error fetching user chats: $e');
       }
       return [];
-    }());
+    }
+
+    return Stream.fromFuture(fetchUserChats());
   }
 
   // ===================== HELPERS =====================

@@ -1,8 +1,10 @@
 /build/
+android/build/
 .dart_tool/
 .packages
 .pub-cache/
 /.android/
+.kotlin/
 ios/Flutter/Flutter.framework
 ios/Flutter/App.framework
 ios/Flutter/Generated.xcconfig
@@ -21,3 +23,4 @@ backend/.vscode/
 __pycache__/
 *.pyc
 backend/__pycache__/
+
