@@ -135,3 +135,35 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         )
 
     return helper_user(user)
+
+@router.put("/users/profile", response_model=UserResponse)
+async def update_user_profile(
+    profile_data: UserProfileUpdate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update profile information (displayName, username) for logged-in user."""
+    token = credentials.credentials
+    payload = decode_access_token(token)
+    if not payload or "sub" not in payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token."
+        )
+    
+    user_id = payload["sub"]
+    query = {"_id": ObjectId(user_id)} if ObjectId.is_valid(user_id) else {"id": user_id}
+
+    update_fields = {}
+    if profile_data.displayName:
+        update_fields["displayName"] = profile_data.displayName.strip()
+    if profile_data.username:
+        update_fields["username"] = profile_data.username.strip().lower()
+
+    if update_fields:
+        await users_collection.update_one(query, {"$set": update_fields})
+
+    updated_user = await users_collection.find_one(query)
+    if not updated_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    return helper_user(updated_user)

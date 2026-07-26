@@ -5,6 +5,9 @@ import logging
 
 from database import check_database_connection
 from auth import router as auth_router
+from items import router as items_router
+from notifications import router as notifications_router
+from chats import router as chats_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,17 +37,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Auth Router
+# Include Routers
 app.include_router(auth_router)
+app.include_router(items_router)
+app.include_router(notifications_router)
+app.include_router(chats_router)
 
 @app.get("/")
 async def root():
     return {
-        "status": "FastAPI backend is running successfully",
+        "status": "FastAPI backend is running successfully with MongoDB Atlas",
         "docs": "/docs",
         "endpoints": {
-            "signup": "/api/signup",
-            "login": "/api/login",
-            "me": "/api/me"
+            "auth": "/api/signup, /api/login, /api/me, /api/users/profile",
+            "items": "/api/items",
+            "notifications": "/api/notifications",
+            "chats": "/api/chats"
         }
     }
