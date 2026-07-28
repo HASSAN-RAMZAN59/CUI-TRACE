@@ -261,10 +261,11 @@ class _LoginScreenState extends State<LoginScreen> {
         Padding(
           padding: const EdgeInsets.only(top: 12),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(
-                height: 40,
+              Flexible(
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Transform.scale(
                       scale: 0.9,
@@ -276,12 +277,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(4)),
                       ),
                     ),
-                    Text('Remember me', style: TextStyle(
-                        fontSize: 14, color: Colors.grey.shade700)),
+                    Flexible(
+                      child: Text(
+                        'Remember me',
+                        style: TextStyle(
+                            fontSize: 14, color: Colors.grey.shade700),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const Spacer(),
               TextButton(
                 onPressed: _isLoading ? null : () =>
                     Navigator.pushNamed(context, '/forgot_password'),

@@ -36,7 +36,7 @@ class _NotificationBadgeState extends State<NotificationBadge> {
   }
 
   void _listenToNotifications() {
-    _countStream = _notificationService.getUnreadCountStream().listen((count) {
+    _countStream = _notificationService.getUnreadCount().listen((count) {
       if (mounted) {
         setState(() {
           _unreadCount = count;
@@ -85,8 +85,4 @@ class _NotificationBadgeState extends State<NotificationBadge> {
       ),
     );
   }
-}
-
-extension on NotificationService {
-  void getUnreadCountStream() {}
 }

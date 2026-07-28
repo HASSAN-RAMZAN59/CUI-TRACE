@@ -209,6 +209,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _viewOtherUserProfile() async {
     try {
       Navigator.pop(context);
+      if (!mounted) return;
       await Navigator.push(
         context,
         MaterialPageRoute(

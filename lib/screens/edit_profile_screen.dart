@@ -100,11 +100,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       print('✅ Profile updated successfully');
       _showSuccess('Profile updated successfully!');
 
-      if (mounted) {
-        Future.delayed(const Duration(seconds: 1), () {
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
           Navigator.pop(context, true);
-        });
-      }
+        }
+      });
     } catch (e) {
       print('❌ Error updating profile: $e');
       _showError('Error: ${e.toString()}');

@@ -213,7 +213,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'CUI Trace',
       theme: ThemeData(
-        useMaterial3: false,
+        useMaterial3: true,
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.blue.shade50,
         appBarTheme: const AppBarTheme(
@@ -243,55 +243,83 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(),
         '/add_item': (context) => const AddItemScreen(),
         '/detail': (context) {
-          final item = ModalRoute.of(context)!.settings.arguments as ItemModel?;
-          if (item == null) {
-            final itemId = ModalRoute.of(context)!.settings.arguments as String?;
-            if (itemId != null) {
-              return FutureBuilder<ItemModel?>(
-                future: appService.getItemById(itemId),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Scaffold(
-                      appBar: AppBar(title: const Text('Item Details')),
-                      body: const Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  if (!snapshot.hasData || snapshot.data == null) {
-                    return Scaffold(
-                      appBar: AppBar(title: const Text('Item Not Found')),
-                      body: const Center(child: Text('Item not found or deleted')),
-                    );
-                  }
-                  return ItemDetailScreen(item: snapshot.data!);
-                },
-              );
-            }
-            return Scaffold(
-              appBar: AppBar(title: const Text('Error')),
-              body: const Center(child: Text('Item not provided')),
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is ItemModel) {
+            return ItemDetailScreen(item: args);
+          } else if (args is String && args.isNotEmpty) {
+            return FutureBuilder<ItemModel?>(
+              future: appService.getItemById(args),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Scaffold(
+                    appBar: AppBar(title: const Text('Item Details')),
+                    body: const Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data == null) {
+                  return Scaffold(
+                    appBar: AppBar(title: const Text('Item Not Found')),
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline, size: 60, color: Colors.orange),
+                          const SizedBox(height: 16),
+                          const Text('Item not found or deleted', style: TextStyle(fontSize: 16)),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                            child: const Text('Return to Home'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return ItemDetailScreen(item: snapshot.data!);
+              },
             );
           }
-          return ItemDetailScreen(item: item);
+          return Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                  const SizedBox(height: 16),
+                  const Text('Item details not provided', style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                    child: const Text('Return to Home'),
+                  ),
+                ],
+              ),
+            ),
+          );
         },
         '/edit_item': (context) {
-          final item = ModalRoute.of(context)!.settings.arguments as ItemModel?;
-          if (item == null) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Error')),
-              body: const Center(child: Text('Item not provided')),
-            );
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is ItemModel) {
+            return EditItemScreen(item: args, itemId: args.id);
+          } else if (args is String && args.isNotEmpty) {
+            return EditItemScreen(itemId: args);
           }
-          return EditItemScreen(item: item, itemId: item.id);
+          return Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: const Center(child: Text('Item not provided')),
+          );
         },
         '/verification': (context) {
-          final item = ModalRoute.of(context)!.settings.arguments as ItemModel?;
-          if (item == null) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Error')),
-              body: const Center(child: Text('Item not provided')),
-            );
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is ItemModel) {
+            return VerificationScreen(item: args);
           }
-          return VerificationScreen(item: item);
+          return Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: const Center(child: Text('Item not provided')),
+          );
         },
         '/chats': (context) => const ChatListScreen(),
         '/notifications': (context) => const NotificationsScreen(),

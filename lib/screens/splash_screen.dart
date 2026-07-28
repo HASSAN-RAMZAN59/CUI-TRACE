@@ -43,6 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
       if (!seenOnboarding) {
         Navigator.pushReplacement(
           context,

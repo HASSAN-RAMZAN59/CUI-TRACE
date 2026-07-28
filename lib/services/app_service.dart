@@ -401,8 +401,8 @@ class AppService {
       try {
         imageUrl = await _cloudinaryService.uploadImage(imageFile);
       } catch (e) {
-        print('⚠️ Cloudinary upload warning: $e');
-        imageUrl = '';
+        print('❌ Cloudinary image upload failed: $e');
+        rethrow;
       }
 
       final token = await _getToken();
