@@ -151,7 +151,7 @@ class CloudinaryService {
       if (originalUrl.contains('/upload/')) {
         final parts = originalUrl.split('/upload/');
         if (parts.length == 2) {
-          return '${parts[0]}/upload/c_${crop},w_${width},h_${height},q_${quality}/${parts[1]}';
+          return '${parts[0]}/upload/c_$crop,w_$width,h_$height,q_$quality/${parts[1]}';
         }
       }
       return originalUrl;

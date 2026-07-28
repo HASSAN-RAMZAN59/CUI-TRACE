@@ -88,5 +88,5 @@ class _NotificationBadgeState extends State<NotificationBadge> {
 }
 
 extension on NotificationService {
-  getUnreadCountStream() {}
+  void getUnreadCountStream() {}
 }

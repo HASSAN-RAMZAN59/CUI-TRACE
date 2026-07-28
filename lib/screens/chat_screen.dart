@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../services/app_service.dart';
 import '../models/user_model.dart';
 import '../models/message_model.dart';
@@ -143,7 +142,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -353,7 +352,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 border: Border(top: BorderSide(color: Colors.grey.shade300)),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: Colors.grey.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, -2)),
                 ],

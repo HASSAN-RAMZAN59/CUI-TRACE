@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/app_service.dart';
 import '../services/notification_service.dart';
-import '../models/item_model.dart';
 import 'detail_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -107,7 +106,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Icon(icon, color: color, size: 20),

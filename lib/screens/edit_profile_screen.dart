@@ -29,7 +29,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   XFile? _newImage;
   Uint8List? _imageBytes;
   bool _loading = false;
-  bool _uploadingImage = false;
+  final bool _uploadingImage = false;
 
   @override
   void initState() {
@@ -238,7 +238,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           border: Border.all(color: Colors.white, width: 3),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 6,
                               offset: const Offset(0, 3),
                             ),

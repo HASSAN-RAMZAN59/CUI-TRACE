@@ -375,7 +375,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12.withOpacity(0.1),
+                    color: Colors.black12.withValues(alpha: 0.1),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),
@@ -510,7 +510,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12.withOpacity(0.05),
+                    color: Colors.black12.withValues(alpha: 0.05),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),
@@ -577,7 +577,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12.withOpacity(0.05),
+                    color: Colors.black12.withValues(alpha: 0.05),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),

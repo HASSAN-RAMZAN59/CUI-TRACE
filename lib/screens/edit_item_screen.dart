@@ -39,7 +39,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
   // Loading states
   bool _isLoading = false;
   bool _isInitialLoading = true;
-  bool _isImageLoading = false;
+  final bool _isImageLoading = false;
 
   // Current item data
   String _currentImageUrl = '';
@@ -461,7 +461,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          value: _selectedCategory,
+          initialValue: _selectedCategory,
           decoration: InputDecoration(
             labelText: 'Category*',
             prefixIcon: const Icon(Icons.category),
@@ -601,7 +601,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.grey.shade100,
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade300,

@@ -618,7 +618,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
           _enableSecurityQuestions ? Icons.security : Icons.security_outlined,
           color: _enableSecurityQuestions ? Colors.blue : Colors.grey,
         ),
-        activeColor: Colors.blue,
+        activeThumbColor: Colors.blue,
       ),
     );
   }
@@ -675,7 +675,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.grey.shade100,
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade300,
@@ -721,7 +721,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          value: _selectedCategory,
+          initialValue: _selectedCategory,
           decoration: InputDecoration(
             labelText: 'Category*',
             prefixIcon: const Icon(Icons.category),
@@ -896,7 +896,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 4,
                     ),
                   ],

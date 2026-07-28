@@ -16,7 +16,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   UserModel? _currentUser;
   bool _loading = true;
-  String _searchQuery = '';
+  final String _searchQuery = '';
 
   @override
   void initState() {
