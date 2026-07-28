@@ -37,6 +37,7 @@ class AppService {
       print('🚀 ======== REGISTRATION START (FastAPI & Atlas) ========');
       print('📧 Email: $email');
       print('👤 Username: $username');
+      print('🌐 Target URL: ${ApiConfig.signupUrl}');
 
       final response = await http.post(
         Uri.parse(ApiConfig.signupUrl),
@@ -47,7 +48,9 @@ class AppService {
           'displayName': displayName.trim(),
           'password': password,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
+
+      print('📥 Response status: ${response.statusCode}');
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -75,11 +78,27 @@ class AppService {
         print('✅ User registered successfully in MongoDB Atlas: ${userModel.id}');
         return userModel;
       } else {
-        final errorData = jsonDecode(response.body);
-        final detail = errorData['detail'] ?? 'Registration failed';
+        String detail = 'Registration failed (${response.statusCode})';
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData is Map && errorData.containsKey('detail')) {
+            final rawDetail = errorData['detail'];
+            if (rawDetail is List) {
+              detail = rawDetail.map((e) => e['msg'] ?? e.toString()).join(', ');
+            } else {
+              detail = rawDetail.toString();
+            }
+          }
+        } catch (_) {}
         print('❌ Signup failed: $detail');
         throw Exception(detail);
       }
+    } on SocketException catch (e) {
+      print('❌ Network error during signup: $e');
+      throw Exception('Cannot connect to FastAPI server at ${ApiConfig.baseUrl}. Please check if the backend server is running.');
+    } on TimeoutException catch (e) {
+      print('❌ Timeout error during signup: $e');
+      throw Exception('Server connection timed out. Please check your network or backend server.');
     } catch (e) {
       print('❌ General registration error: $e');
       rethrow;
@@ -91,6 +110,7 @@ class AppService {
     try {
       print('🔐 ======== LOGIN ATTEMPT (FastAPI & Atlas) ========');
       print('📧 Email: $email');
+      print('🌐 Target URL: ${ApiConfig.loginUrl}');
 
       final response = await http.post(
         Uri.parse(ApiConfig.loginUrl),
@@ -99,7 +119,9 @@ class AppService {
           'email': email.trim().toLowerCase(),
           'password': password,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
+
+      print('📥 Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -127,11 +149,27 @@ class AppService {
         print('✅ Login successful for user: ${userModel.id}');
         return userModel;
       } else {
-        final errorData = jsonDecode(response.body);
-        final detail = errorData['detail'] ?? 'Invalid credentials';
+        String detail = 'Login failed (${response.statusCode})';
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData is Map && errorData.containsKey('detail')) {
+            final rawDetail = errorData['detail'];
+            if (rawDetail is List) {
+              detail = rawDetail.map((e) => e['msg'] ?? e.toString()).join(', ');
+            } else {
+              detail = rawDetail.toString();
+            }
+          }
+        } catch (_) {}
         print('❌ Login failed: $detail');
         throw Exception(detail);
       }
+    } on SocketException catch (e) {
+      print('❌ Network error during login: $e');
+      throw Exception('Cannot connect to FastAPI server at ${ApiConfig.baseUrl}. Please check if the backend server is running.');
+    } on TimeoutException catch (e) {
+      print('❌ Timeout error during login: $e');
+      throw Exception('Server connection timed out. Please check your network or backend server.');
     } catch (e) {
       print('❌ General login error: $e');
       rethrow;

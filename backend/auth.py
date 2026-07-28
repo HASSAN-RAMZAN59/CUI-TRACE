@@ -7,8 +7,11 @@ from database import users_collection
 from models import UserSignup, UserLogin, UserResponse, TokenResponse, UserProfileUpdate
 from security import verify_password, get_password_hash, create_access_token, decode_access_token
 
+import logging
+
 router = APIRouter(prefix="/api", tags=["Authentication"])
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 def helper_user(user_doc: dict) -> UserResponse:
     """Format MongoDB user doc into UserResponse Pydantic model."""
@@ -35,75 +38,101 @@ async def signup(user_data: UserSignup):
     """Registers a new user, hashes password, saves to MongoDB, and returns JWT token."""
     email_clean = user_data.email.strip().lower()
     username_clean = user_data.username.strip().lower()
+    logger.info(f"📝 Received signup request for email: {email_clean}, username: {username_clean}")
 
-    # Check if email already exists
-    existing_email = await users_collection.find_one({"email": email_clean})
-    if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="An account with this email address already exists."
+    try:
+        # Check if email already exists
+        existing_email = await users_collection.find_one({"email": email_clean})
+        if existing_email:
+            logger.warning(f"⚠️ Signup failed: Email {email_clean} already registered.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="An account with this email address already exists."
+            )
+
+        # Check if username already exists
+        existing_username = await users_collection.find_one({"username": username_clean})
+        if existing_username:
+            logger.warning(f"⚠️ Signup failed: Username {username_clean} already taken.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This username is already taken. Please choose another."
+            )
+
+        # Hash password and create user doc
+        hashed_pwd = get_password_hash(user_data.password)
+        now = datetime.utcnow()
+
+        user_document = {
+            "email": email_clean,
+            "username": username_clean,
+            "displayName": user_data.displayName.strip(),
+            "password": hashed_pwd,
+            "createdAt": now,
+            "updatedAt": now
+        }
+
+        result = await users_collection.insert_one(user_document)
+        user_document["_id"] = result.inserted_id
+
+        # Format user response and generate JWT
+        user_response = helper_user(user_document)
+        token = create_access_token(data={"sub": user_response.id, "email": user_response.email})
+        logger.info(f"✅ Signup successful! Created user ID: {user_response.id}")
+
+        return TokenResponse(
+            access_token=token,
+            token_type="bearer",
+            user=user_response
         )
-
-    # Check if username already exists
-    existing_username = await users_collection.find_one({"username": username_clean})
-    if existing_username:
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Database/Server error during signup: {e}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This username is already taken. Please choose another."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database connection error: {str(e)}"
         )
-
-    # Hash password and create user doc
-    hashed_pwd = get_password_hash(user_data.password)
-    now = datetime.utcnow()
-
-    user_document = {
-        "email": email_clean,
-        "username": username_clean,
-        "displayName": user_data.displayName.strip(),
-        "password": hashed_pwd,
-        "createdAt": now,
-        "updatedAt": now
-    }
-
-    result = await users_collection.insert_one(user_document)
-    user_document["_id"] = result.inserted_id
-
-    # Format user response and generate JWT
-    user_response = helper_user(user_document)
-    token = create_access_token(data={"sub": user_response.id, "email": user_response.email})
-
-    return TokenResponse(
-        access_token=token,
-        token_type="bearer",
-        user=user_response
-    )
 
 @router.post("/login", response_model=TokenResponse)
 async def login(credentials: UserLogin):
     """Verifies user credentials and returns a secure JWT access token."""
     email_clean = credentials.email.strip().lower()
+    logger.info(f"🔐 Received login request for email: {email_clean}")
 
-    user = await users_collection.find_one({"email": email_clean})
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password."
+    try:
+        user = await users_collection.find_one({"email": email_clean})
+        if not user:
+            logger.warning(f"⚠️ Login failed: User {email_clean} not found.")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password."
+            )
+
+        if not verify_password(credentials.password, user.get("password", "")):
+            logger.warning(f"⚠️ Login failed: Incorrect password for {email_clean}.")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password."
+            )
+
+        user_response = helper_user(user)
+        token = create_access_token(data={"sub": user_response.id, "email": user_response.email})
+        logger.info(f"✅ Login successful for user ID: {user_response.id}")
+
+        return TokenResponse(
+            access_token=token,
+            token_type="bearer",
+            user=user_response
         )
-
-    if not verify_password(credentials.password, user.get("password", "")):
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Database/Server error during login: {e}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database connection error: {str(e)}"
         )
-
-    user_response = helper_user(user)
-    token = create_access_token(data={"sub": user_response.id, "email": user_response.email})
-
-    return TokenResponse(
-        access_token=token,
-        token_type="bearer",
-        user=user_response
-    )
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):

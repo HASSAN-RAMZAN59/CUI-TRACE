@@ -13,8 +13,15 @@ DATABASE_NAME = os.getenv("DATABASE_NAME", "cui_trace_db")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Motor Async Client
-client = AsyncIOMotorClient(MONGODB_URL, serverSelectionTimeoutMS=5000)
+# Initialize Motor Async Client with TLS CA certificate bundle if certifi is available
+client_kwargs = {"serverSelectionTimeoutMS": 5000}
+try:
+    import certifi
+    client_kwargs["tlsCAFile"] = certifi.where()
+except Exception:
+    pass
+
+client = AsyncIOMotorClient(MONGODB_URL, **client_kwargs)
 db = client[DATABASE_NAME]
 
 # Collections
