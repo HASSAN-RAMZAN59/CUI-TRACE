@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
@@ -34,10 +35,10 @@ class AppService {
     required String displayName,
   }) async {
     try {
-      print('🚀 ======== REGISTRATION START (FastAPI & Atlas) ========');
-      print('📧 Email: $email');
-      print('👤 Username: $username');
-      print('🌐 Target URL: ${ApiConfig.signupUrl}');
+      debugPrint('🚀 ======== REGISTRATION START (FastAPI & Atlas) ========');
+      debugPrint('📧 Email: $email');
+      debugPrint('👤 Username: $username');
+      debugPrint('🌐 Target URL: ${ApiConfig.signupUrl}');
 
       final response = await http.post(
         Uri.parse(ApiConfig.signupUrl),
@@ -50,7 +51,7 @@ class AppService {
         }),
       ).timeout(const Duration(seconds: 15));
 
-      print('📥 Response status: ${response.statusCode}');
+      debugPrint('📥 Response status: ${response.statusCode}');
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -75,7 +76,7 @@ class AppService {
         await prefs.setString('current_user_email', userModel.email);
         await prefs.setString('current_user_name', userModel.displayName);
 
-        print('✅ User registered successfully in MongoDB Atlas: ${userModel.id}');
+        debugPrint('✅ User registered successfully in MongoDB Atlas: ${userModel.id}');
         return userModel;
       } else {
         String detail = 'Registration failed (${response.statusCode})';
@@ -90,17 +91,17 @@ class AppService {
             }
           }
         } catch (_) {}
-        print('❌ Signup failed: $detail');
+        debugPrint('❌ Signup failed: $detail');
         throw Exception(detail);
       }
     } on SocketException catch (e) {
-      print('❌ Network error during signup: $e');
+      debugPrint('❌ Network error during signup: $e');
       throw Exception('Cannot connect to FastAPI server at ${ApiConfig.baseUrl}. Please check if the backend server is running.');
     } on TimeoutException catch (e) {
-      print('❌ Timeout error during signup: $e');
+      debugPrint('❌ Timeout error during signup: $e');
       throw Exception('Server connection timed out. Please check your network or backend server.');
     } catch (e) {
-      print('❌ General registration error: $e');
+      debugPrint('❌ General registration error: $e');
       rethrow;
     }
   }
@@ -108,9 +109,9 @@ class AppService {
   // ===================== LOGIN FUNCTIONS =====================
   Future<UserModel?> loginUser(String email, String password) async {
     try {
-      print('🔐 ======== LOGIN ATTEMPT (FastAPI & Atlas) ========');
-      print('📧 Email: $email');
-      print('🌐 Target URL: ${ApiConfig.loginUrl}');
+      debugPrint('🔐 ======== LOGIN ATTEMPT (FastAPI & Atlas) ========');
+      debugPrint('📧 Email: $email');
+      debugPrint('🌐 Target URL: ${ApiConfig.loginUrl}');
 
       final response = await http.post(
         Uri.parse(ApiConfig.loginUrl),
@@ -121,7 +122,7 @@ class AppService {
         }),
       ).timeout(const Duration(seconds: 15));
 
-      print('📥 Response status: ${response.statusCode}');
+      debugPrint('📥 Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -146,7 +147,7 @@ class AppService {
         await prefs.setString('current_user_email', userModel.email);
         await prefs.setString('current_user_name', userModel.displayName);
 
-        print('✅ Login successful for user: ${userModel.id}');
+        debugPrint('✅ Login successful for user: ${userModel.id}');
         return userModel;
       } else {
         String detail = 'Login failed (${response.statusCode})';
@@ -161,17 +162,17 @@ class AppService {
             }
           }
         } catch (_) {}
-        print('❌ Login failed: $detail');
+        debugPrint('❌ Login failed: $detail');
         throw Exception(detail);
       }
     } on SocketException catch (e) {
-      print('❌ Network error during login: $e');
+      debugPrint('❌ Network error during login: $e');
       throw Exception('Cannot connect to FastAPI server at ${ApiConfig.baseUrl}. Please check if the backend server is running.');
     } on TimeoutException catch (e) {
-      print('❌ Timeout error during login: $e');
+      debugPrint('❌ Timeout error during login: $e');
       throw Exception('Server connection timed out. Please check your network or backend server.');
     } catch (e) {
-      print('❌ General login error: $e');
+      debugPrint('❌ General login error: $e');
       rethrow;
     }
   }
@@ -182,7 +183,7 @@ class AppService {
 
   // ===================== NOTIFICATION FUNCTIONS =====================
   Future<void> initializeFCM() async {
-    print('📱 Notification service initialized');
+    debugPrint('📱 Notification service initialized');
   }
 
   Future<void> sendNotification({
@@ -206,7 +207,7 @@ class AppService {
         }),
       );
     } catch (e) {
-      print('❌ Error sending notification: $e');
+      debugPrint('❌ Error sending notification: $e');
     }
   }
 
@@ -396,12 +397,12 @@ class AppService {
     bool requiresVerification = false,
   }) async {
     try {
-      print('🚀 Starting item upload to Cloudinary & FastAPI Backend...');
+      debugPrint('🚀 Starting item upload to Cloudinary & FastAPI Backend...');
       String imageUrl = '';
       try {
         imageUrl = await _cloudinaryService.uploadImage(imageFile);
       } catch (e) {
-        print('❌ Cloudinary image upload failed: $e');
+        debugPrint('❌ Cloudinary image upload failed: $e');
         rethrow;
       }
 
@@ -425,7 +426,7 @@ class AppService {
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final item = ItemModel.fromFirestore(data);
-        print('✅ Item saved in MongoDB Atlas: ${item.id}');
+        debugPrint('✅ Item saved in MongoDB Atlas: ${item.id}');
 
         await sendNewItemNotification(
           itemId: item.id,
@@ -440,7 +441,7 @@ class AppService {
         throw Exception('Failed to save item: ${response.body}');
       }
     } catch (e) {
-      print('❌ Error uploading item: $e');
+      debugPrint('❌ Error uploading item: $e');
       rethrow;
     }
   }
@@ -461,7 +462,7 @@ class AppService {
         return ItemModel.fromFirestore(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Error fetching item: $e');
+      debugPrint('Error fetching item: $e');
     }
     return null;
   }
@@ -478,7 +479,7 @@ class AppService {
         return list.map((item) => ItemModel.fromFirestore(item)).toList();
       }
     } catch (e) {
-      print('Error fetching all items: $e');
+      debugPrint('Error fetching all items: $e');
     }
     return [];
   }
@@ -491,7 +492,7 @@ class AppService {
         return list.map((item) => ItemModel.fromFirestore(item)).toList();
       }
     } catch (e) {
-      print('Error fetching user items: $e');
+      debugPrint('Error fetching user items: $e');
     }
     return [];
   }
@@ -505,7 +506,7 @@ class AppService {
         body: jsonEncode(item.toFirestore()),
       );
     } catch (e) {
-      print('Error updating item: $e');
+      debugPrint('Error updating item: $e');
     }
   }
 
@@ -517,7 +518,7 @@ class AppService {
         headers: ApiConfig.headers(token: token),
       );
     } catch (e) {
-      print('Error deleting item: $e');
+      debugPrint('Error deleting item: $e');
     }
   }
 
@@ -541,7 +542,7 @@ class AppService {
         }),
       );
     } catch (e) {
-      print('Error saving verification attempt: $e');
+      debugPrint('Error saving verification attempt: $e');
     }
   }
 
@@ -553,7 +554,7 @@ class AppService {
         return data['canAttempt'] ?? true;
       }
     } catch (e) {
-      print('Error checking verification attempt: $e');
+      debugPrint('Error checking verification attempt: $e');
     }
     return true;
   }
@@ -584,7 +585,7 @@ class AppService {
         return _currentUser;
       }
     } catch (e) {
-      print('Error fetching current user: $e');
+      debugPrint('Error fetching current user: $e');
     }
 
     final prefs = await SharedPreferences.getInstance();
@@ -640,7 +641,7 @@ class AppService {
         );
       }
     } catch (e) {
-      print('Error updating user profile: $e');
+      debugPrint('Error updating user profile: $e');
     }
   }
 
@@ -655,7 +656,7 @@ class AppService {
   }
 
   Future<void> resetPassword(String email) async {
-    print('Password reset email requested for $email');
+    debugPrint('Password reset email requested for $email');
   }
 
   // ===================== CHAT FUNCTIONS =====================
@@ -688,7 +689,7 @@ class AppService {
         };
       }
     } catch (e) {
-      print('Error in createOrGetChat: $e');
+      debugPrint('Error in createOrGetChat: $e');
     }
 
     final chatId = DateTime.now().millisecondsSinceEpoch.toString();
@@ -725,7 +726,7 @@ class AppService {
         }),
       );
     } catch (e) {
-      print('Error sending message: $e');
+      debugPrint('Error sending message: $e');
     }
   }
 
@@ -742,7 +743,7 @@ class AppService {
           return list.map((m) => MessageModel.fromFirestore(m)).toList();
         }
       } catch (e) {
-        print('Error fetching chat messages: $e');
+        debugPrint('Error fetching chat messages: $e');
       }
       return [];
     }
@@ -776,7 +777,7 @@ class AppService {
           }).toList();
         }
       } catch (e) {
-        print('Error fetching user chats: $e');
+        debugPrint('Error fetching user chats: $e');
       }
       return [];
     }

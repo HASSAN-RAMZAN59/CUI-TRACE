@@ -151,6 +151,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     final otherUserId = chat['otherUserId'] ?? '';
     final otherUserName = chat['otherUserName'] ?? 'Unknown';
     final otherUserImage = chat['otherUserImage'] ?? '';
+    final lastMessage = chat['lastMessage'] ?? '';
     final rawTime = chat['lastMessageTime'];
     final DateTime lastMessageTime = rawTime is DateTime
         ? rawTime

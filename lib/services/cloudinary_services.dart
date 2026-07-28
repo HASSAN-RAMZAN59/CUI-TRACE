@@ -1,7 +1,7 @@
 // lib/services/cloudinary_services.dart -
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
@@ -25,13 +25,13 @@ class CloudinaryService {
 
       return pickedFile;
     } catch (e) {
-      print('❌ Error picking image: $e');
+      debugPrint('❌ Error picking image: $e');
       return null;
     }
   }
   Future<String> uploadImage(dynamic imageSource, {String folder = 'cui_trace'}) async {
     try {
-      print('📤 Uploading image to Cloudinary...');
+      debugPrint('📤 Uploading image to Cloudinary...');
 
       late File imageFile;
       late List<int> imageBytes;
@@ -77,8 +77,8 @@ class CloudinaryService {
       request.fields['folder'] = folder;
       request.fields['public_id'] = 'item_${DateTime.now().millisecondsSinceEpoch}';
 
-      print('🔄 Sending request to Cloudinary...');
-      print('📤 Parameters: upload_preset=${CloudinaryConfig.uploadPreset}');
+      debugPrint('🔄 Sending request to Cloudinary...');
+      debugPrint('📤 Parameters: upload_preset=${CloudinaryConfig.uploadPreset}');
 
       final response = await request.send().timeout(
         const Duration(seconds: 30),
@@ -88,16 +88,16 @@ class CloudinaryService {
       );
 
       final responseData = await http.Response.fromStream(response);
-      print('📥 Response status: ${response.statusCode}');
+      debugPrint('📥 Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(responseData.body);
         final secureUrl = jsonResponse['secure_url'] as String;
-        print('✅ Image uploaded successfully');
+        debugPrint('✅ Image uploaded successfully');
         return secureUrl;
       } else {
         final errorBody = responseData.body;
-        print('❌ Upload failed: ${response.statusCode}');
+        debugPrint('❌ Upload failed: ${response.statusCode}');
 
         if (errorBody.contains('Transformation parameter is not allowed')) {
           throw Exception(
@@ -108,17 +108,17 @@ class CloudinaryService {
         throw Exception('Upload failed: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Cloudinary upload error: $e');
+      debugPrint('❌ Cloudinary upload error: $e');
       rethrow;
     }
   }
   Future<bool> deleteImage(String publicId) async {
     try {
-      print('🗑️ Deleting image: $publicId');
+      debugPrint('🗑️ Deleting image: $publicId');
 
       return true;
     } catch (e) {
-      print('❌ Error deleting image: $e');
+      debugPrint('❌ Error deleting image: $e');
       return true;
     }
   }
@@ -136,7 +136,7 @@ class CloudinaryService {
         height: height,
       );
     } catch (e) {
-      print('⚠️ Error optimizing URL: $e');
+      debugPrint('⚠️ Error optimizing URL: $e');
       return originalUrl;
     }
   }
@@ -156,7 +156,7 @@ class CloudinaryService {
       }
       return originalUrl;
     } catch (e) {
-      print('⚠️ Error adding transformation: $e');
+      debugPrint('⚠️ Error adding transformation: $e');
       return originalUrl;
     }
   }
@@ -190,11 +190,11 @@ class CloudinaryService {
 
     for (int i = 0; i < images.length; i++) {
       try {
-        print('📤 Uploading image ${i + 1}/${images.length}...');
+        debugPrint('📤 Uploading image ${i + 1}/${images.length}...');
         final url = await uploadImage(images[i]);
         urls.add(url);
       } catch (e) {
-        print('⚠️ Failed to upload image ${i + 1}: $e');
+        debugPrint('⚠️ Failed to upload image ${i + 1}: $e');
       }
     }
 
