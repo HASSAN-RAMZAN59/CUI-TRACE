@@ -13,30 +13,49 @@ DATABASE_NAME = os.getenv("DATABASE_NAME", "cui_trace_db")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Motor Async Client with TLS CA certificate bundle if certifi is available
-client_kwargs = {"serverSelectionTimeoutMS": 5000}
-try:
-    import certifi
-    client_kwargs["tlsCAFile"] = certifi.where()
-except Exception:
-    pass
+# Lazy Motor Async Client initialization bound to active event loop
+_client = None
 
-client = AsyncIOMotorClient(MONGODB_URL, **client_kwargs)
-db = client[DATABASE_NAME]
+def get_client():
+    global _client
+    if _client is None:
+        client_kwargs = {"serverSelectionTimeoutMS": 5000}
+        try:
+            import certifi
+            client_kwargs["tlsCAFile"] = certifi.where()
+        except Exception:
+            pass
+        _client = AsyncIOMotorClient(MONGODB_URL, **client_kwargs)
+    return _client
 
-# Collections
-users_collection = db["users"]
-items_collection = db["items"]
-chats_collection = db["chats"]
-messages_collection = db["messages"]
-notifications_collection = db["notifications"]
-verifications_collection = db["verifications"]
+def get_db():
+    return get_client()[DATABASE_NAME]
+
+class CollectionProxy:
+    """Proxy object so collections dynamically bind to the current asyncio event loop."""
+    def __init__(self, collection_name: str):
+        self._name = collection_name
+
+    @property
+    def _coll(self):
+        return get_db()[self._name]
+
+    def __getattr__(self, name: str):
+        return getattr(self._coll, name)
+
+# Collections (using CollectionProxy for dynamic event loop binding)
+users_collection = CollectionProxy("users")
+items_collection = CollectionProxy("items")
+chats_collection = CollectionProxy("chats")
+messages_collection = CollectionProxy("messages")
+notifications_collection = CollectionProxy("notifications")
+verifications_collection = CollectionProxy("verifications")
 
 async def check_database_connection():
     """Verify database connectivity on startup."""
     try:
         # Ping the server to check connectivity
-        await client.admin.command('ping')
+        await get_client().admin.command('ping')
         logger.info(f"✅ Successfully connected to MongoDB database: '{DATABASE_NAME}'")
         return True
     except Exception as e:
