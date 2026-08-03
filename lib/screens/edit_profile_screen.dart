@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,6 +23,7 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final CloudinaryService _cloudinaryService = CloudinaryService();
   final AppService _appService = AppService();
@@ -31,20 +33,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _loading = false;
   final bool _uploadingImage = false;
 
+  String? _currentProfileImageUrl;
+
   @override
   void initState() {
     super.initState();
     _nameController.text = widget.currentName;
+    _emailController.text = widget.currentEmail;
+    _currentProfileImageUrl = widget.currentImageUrl;
     _loadUserData();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
     try {
       final currentUser = await _appService.getCurrentUser();
-      if (currentUser != null) {
-        _nameController.text = currentUser.displayName.isNotEmpty
-            ? currentUser.displayName
-            : widget.currentName;
+      if (currentUser != null && mounted) {
+        setState(() {
+          _nameController.text = currentUser.displayName.isNotEmpty
+              ? currentUser.displayName
+              : widget.currentName;
+          _emailController.text = currentUser.email.isNotEmpty
+              ? currentUser.email
+              : widget.currentEmail;
+          _phoneController.text = currentUser.phoneNumber;
+          if (currentUser.profileImage.isNotEmpty) {
+            _currentProfileImageUrl = currentUser.profileImage;
+          }
+        });
       }
     } catch (e) {
       print('❌ Error loading user data: $e');
@@ -67,7 +90,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _imageBytes = bytes;
           });
         }
-        print('✅ Image selected: ${xFile.name}');
+        print('✅ Image selected: ${xFile.name} (path: ${xFile.path})');
       }
     } catch (e) {
       print('❌ Error picking image: $e');
@@ -92,19 +115,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       final userId = _appService.currentUserId ?? 'user_id';
+      String? imagePath = _newImage?.path ?? _currentProfileImageUrl;
+
       await _appService.updateUserProfile(
         userId: userId,
         displayName: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+        profileImage: imagePath,
       );
 
-      print('✅ Profile updated successfully');
+      print('✅ Profile updated successfully with image: $imagePath');
       _showSuccess('Profile updated successfully!');
-
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          Navigator.pop(context, true);
-        }
-      });
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
     } catch (e) {
       print('❌ Error updating profile: $e');
       _showError('Error: ${e.toString()}');
@@ -116,37 +141,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildImagePreview() {
+    ImageProvider? imageProvider;
     if (_imageBytes != null) {
-      return CircleAvatar(
-        radius: 60,
-        backgroundColor: Colors.blue.shade50,
-        backgroundImage: MemoryImage(_imageBytes!),
-        child: _uploadingImage
-            ? const CircularProgressIndicator(color: Colors.white)
-            : null,
-      );
-    } else if (widget.currentImageUrl != null && widget.currentImageUrl!.isNotEmpty) {
-      return CircleAvatar(
-        radius: 60,
-        backgroundColor: Colors.blue.shade50,
-        backgroundImage: NetworkImage(widget.currentImageUrl!),
-      );
+      imageProvider = MemoryImage(_imageBytes!);
     } else {
-      return CircleAvatar(
+      final imgUrl = _currentProfileImageUrl ?? widget.currentImageUrl ?? '';
+      if (imgUrl.isNotEmpty) {
+        if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+          imageProvider = NetworkImage(imgUrl);
+        } else {
+          final file = File(imgUrl);
+          if (file.existsSync() || imgUrl.startsWith('/') || imgUrl.contains('\\') || imgUrl.contains(':')) {
+            imageProvider = FileImage(file);
+          }
+        }
+      }
+    }
+
+    return GestureDetector(
+      onTap: _uploadingImage ? null : _pickImage,
+      child: CircleAvatar(
         radius: 60,
         backgroundColor: Colors.blue.shade100,
-        child: Text(
-          _nameController.text.isNotEmpty
-              ? _nameController.text[0].toUpperCase()
-              : 'U',
-          style: const TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: Colors.blue,
-          ),
-        ),
-      );
-    }
+        backgroundImage: imageProvider,
+        child: imageProvider == null
+            ? Text(
+                _nameController.text.isNotEmpty
+                    ? _nameController.text[0].toUpperCase()
+                    : 'U',
+                style: const TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
+              )
+            : null,
+      ),
+    );
   }
 
   void _showError(String message) {
@@ -175,13 +206,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         duration: const Duration(seconds: 3),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    super.dispose();
   }
 
   @override
@@ -299,17 +323,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 8),
             TextField(
-              controller: TextEditingController(text: widget.currentEmail),
-              readOnly: true,
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                hintText: 'Email cannot be changed',
-                prefixIcon: const Icon(Icons.email, color: Colors.grey),
+                hintText: 'Enter your email address',
+                prefixIcon: const Icon(Icons.email, color: Colors.blue),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: Colors.white,
               ),
             ),
             const SizedBox(height: 20),

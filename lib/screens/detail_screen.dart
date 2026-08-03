@@ -1,10 +1,12 @@
 // screens/item_detail_screen.dart
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/item_model.dart';
 import '../services/app_service.dart';
 import 'verification_screen.dart';
+import 'chat_screen.dart';
 
 class ItemDetailScreen extends StatefulWidget {
   final ItemModel item;
@@ -115,16 +117,17 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           _loading = false;
         });
 
-        Navigator.pushNamed(
+        Navigator.push(
           context,
-          '/chat',
-          arguments: {
-            'chatId': chatId,
-            'otherUserId': widget.item.uploaderId,
-            'otherUserName': widget.item.uploader,
-            'itemId': widget.item.id,
-            'itemTitle': widget.item.title,
-          },
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              chatId: chatId,
+              otherUserId: widget.item.uploaderId,
+              otherUserName: widget.item.uploader,
+              itemId: widget.item.id,
+              itemTitle: widget.item.title,
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -339,6 +342,39 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
+  Widget _buildDetailImage(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.image_not_supported, size: 60, color: Colors.grey.shade400),
+            const SizedBox(height: 8),
+            Text('No Image Available', style: TextStyle(color: Colors.grey.shade600)),
+          ],
+        ),
+      );
+    }
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+        errorWidget: (context, url, error) => Center(
+          child: Icon(Icons.broken_image, size: 60, color: Colors.grey.shade400),
+        ),
+      );
+    }
+    final file = File(imageUrl);
+    return Image.file(
+      file,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => Center(
+        child: Icon(Icons.broken_image, size: 60, color: Colors.grey.shade400),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
@@ -381,42 +417,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   ),
                 ],
               ),
-              child: item.imageUrl.isNotEmpty
-                  ? ClipRRect(
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: item.imageUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Center(
-                    child: CircularProgressIndicator(
-                      color: item.isLost ? Colors.red : Colors.green,
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Center(
-                    child: Icon(
-                      Icons.image_not_supported,
-                      size: 60,
-                      color: Colors.grey.shade400,
-                    ),
-                  ),
-                ),
-              )
-                  : Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.image_not_supported,
-                      size: 60,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No Image Available',
-                      style: TextStyle(color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
+                child: _buildDetailImage(item.imageUrl),
               ),
             ),
             const SizedBox(height: 20),

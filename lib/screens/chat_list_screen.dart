@@ -92,7 +92,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _appService.getUserChatsStream(_currentUser!.id),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 

@@ -9,6 +9,8 @@ class UserModel {
   final DateTime createdAt;
   final DateTime lastLogin;
   final bool isEmailVerified;
+  final String phoneNumber;
+  final String profileImage;
 
   UserModel({
     required this.id,
@@ -19,6 +21,8 @@ class UserModel {
     required this.createdAt,
     required this.lastLogin,
     this.isEmailVerified = true,
+    this.phoneNumber = '',
+    this.profileImage = '',
   });
 
   factory UserModel.fromFirestore(dynamic doc) {
@@ -51,6 +55,8 @@ class UserModel {
       createdAt: safeDate(data['createdAt']),
       lastLogin: safeDate(data['lastLogin']),
       isEmailVerified: true,
+      phoneNumber: data['phoneNumber']?.toString() ?? data['phone']?.toString() ?? '',
+      profileImage: data['profileImage']?.toString() ?? data['imageUrl']?.toString() ?? '',
     );
   }
 
@@ -64,6 +70,8 @@ class UserModel {
       'createdAt': createdAt.toIso8601String(),
       'lastLogin': lastLogin.toIso8601String(),
       'isEmailVerified': true,
+      'phoneNumber': phoneNumber,
+      'profileImage': profileImage,
     };
   }
 

@@ -1,4 +1,5 @@
 // screens/home_screen.dart
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -8,8 +9,12 @@ import 'add_item_screen.dart';
 import 'login_screen.dart';
 import 'edit_profile_screen.dart';
 import 'chat_list_screen.dart';
+import 'chat_screen.dart';
 import 'edit_item_screen.dart';
 import 'notifications_screen.dart';
+import 'settings_screen.dart';
+import 'help_support_screen.dart';
+import 'privacy_policy_screen.dart';
 import '../services/app_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -50,9 +55,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _initializeData() async {
-    await _loadUserProfile();
-    await _loadItems();
-    await _fetchCounts();
+    // 1. Immediately load cached local items so UI renders in 0ms!
+    final localCached = await _appService.getCachedItemsLocal();
+    if (mounted) {
+      setState(() {
+        _items = localCached;
+        _isLoading = false;
+      });
+    }
+
+    // 2. Load user profile & counts concurrently in background
+    _loadUserProfile();
+    _fetchCounts();
+
+    // 3. Silently fetch fresh items in background
+    _syncFreshItems();
+  }
+
+  Future<void> _syncFreshItems() async {
+    try {
+      final fresh = await _appService.getAllItems();
+      if (mounted && fresh.isNotEmpty) {
+        setState(() {
+          _items = fresh;
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadUserProfile() async {
@@ -69,16 +97,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 : '@user';
             _userEmail = currentUser.email;
             _userId = currentUser.id;
-            _profileImageUrl = null;
+            _profileImageUrl = currentUser.profileImage.isNotEmpty
+                ? currentUser.profileImage
+                : null;
           });
         }
       } else {
         final prefs = await SharedPreferences.getInstance();
         if (mounted) {
           setState(() {
-            _displayName = prefs.getString('displayName') ?? 'User';
+            _displayName = prefs.getString('displayName') ?? prefs.getString('current_user_name') ?? 'User';
             _username = '@${prefs.getString('username') ?? 'user'}';
-            _userEmail = prefs.getString('email') ?? '';
+            _userEmail = prefs.getString('email') ?? prefs.getString('current_user_email') ?? '';
+            _profileImageUrl = prefs.getString('current_user_image');
           });
         }
       }
@@ -88,28 +119,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadItems() async {
+    final cached = await _appService.getCachedItemsLocal();
     if (mounted) {
-      setState(() => _isLoading = true);
+      setState(() {
+        _items = cached;
+        _isLoading = false;
+        _isRefreshing = false;
+      });
     }
-
-    try {
-      final items = await _appService.getAllItems();
-      if (mounted) {
-        setState(() {
-          _items = items;
-          _isLoading = false;
-          _isRefreshing = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading items: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _isRefreshing = false;
-        });
-      }
-    }
+    await _syncFreshItems();
   }
 
   Future<void> _fetchCounts() async {
@@ -137,6 +155,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     await _loadItems();
     await _fetchCounts();
+    if (mounted) {
+      setState(() => _isRefreshing = false);
+    }
   }
 
   List<ItemModel> _getFilteredItems() {
@@ -150,9 +171,19 @@ class _HomeScreenState extends State<HomeScreen> {
         filtered = filtered.where((item) => !item.isLost).toList();
         break;
       case 3:
-        filtered = filtered
-            .where((item) => item.uploaderId == _userId)
-            .toList();
+        filtered = filtered.where((item) {
+          final uploaderId = item.uploaderId.toLowerCase();
+          final uploaderName = item.uploader.toLowerCase();
+          final curUserId = _userId.toLowerCase();
+          final curEmail = _userEmail.toLowerCase();
+          final curName = _displayName.toLowerCase();
+
+          if (curUserId.isNotEmpty && uploaderId == curUserId) return true;
+          if (curEmail.isNotEmpty && uploaderId == curEmail) return true;
+          if (curName.isNotEmpty && uploaderName == curName) return true;
+          if (uploaderId == 'guest' || uploaderId == 'user_local' || uploaderId.startsWith('user_')) return true;
+          return false;
+        }).toList();
         break;
     }
 
@@ -469,7 +500,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  ImageProvider? _getDrawerAvatarImage(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return null;
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return CachedNetworkImageProvider(imagePath);
+    }
+    final file = File(imagePath);
+    if (file.existsSync() || imagePath.startsWith('/') || imagePath.contains('\\') || imagePath.contains(':')) {
+      return FileImage(file);
+    }
+    return null;
+  }
+
   Widget _buildDrawer() {
+    final avatarProvider = _getDrawerAvatarImage(_profileImageUrl);
+
     return Drawer(
       child: Column(
         children: [
@@ -482,20 +527,18 @@ class _HomeScreenState extends State<HomeScreen> {
             currentAccountPicture: CircleAvatar(
               radius: 30,
               backgroundColor: Colors.blue.shade100,
-              backgroundImage: _profileImageUrl != null
-                  ? NetworkImage(_profileImageUrl!)
-                  : null,
-              child: _profileImageUrl == null
+              backgroundImage: avatarProvider,
+              child: avatarProvider == null
                   ? Text(
-                _displayName.isNotEmpty
-                    ? _displayName[0].toUpperCase()
-                    : 'U',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              )
+                      _displayName.isNotEmpty
+                          ? _displayName[0].toUpperCase()
+                          : 'U',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    )
                   : null,
             ),
             decoration: const BoxDecoration(
@@ -568,19 +611,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: Icons.settings,
                   title: 'Settings',
                   count: null,
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    );
+                  },
                 ),
                 _buildDrawerItem(
                   icon: Icons.help,
                   title: 'Help & Support',
                   count: null,
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+                    );
+                  },
                 ),
                 _buildDrawerItem(
                   icon: Icons.privacy_tip,
                   title: 'Privacy Policy',
                   count: null,
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+                    );
+                  },
                 ),
               ],
             ),
@@ -721,6 +782,41 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildCardImage(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      return Container(
+        height: 180,
+        width: double.infinity,
+        color: Colors.blue.shade50,
+        child: Icon(Icons.image_not_supported, size: 48, color: Colors.blue.shade300),
+      );
+    }
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
+        height: 180,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(color: Colors.grey.shade200),
+        errorWidget: (context, url, error) => Container(
+          color: Colors.blue.shade50,
+          child: Icon(Icons.broken_image, size: 48, color: Colors.blue.shade300),
+        ),
+      );
+    }
+    final file = File(imageUrl);
+    return Image.file(
+      file,
+      height: 180,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => Container(
+        color: Colors.blue.shade50,
+        child: Icon(Icons.broken_image, size: 48, color: Colors.blue.shade300),
+      ),
+    );
+  }
+
   Widget _buildItemCard(ItemModel item) {
     return Card(
       elevation: 4,
@@ -737,24 +833,12 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (item.imageUrl.isNotEmpty)
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
-                    ),
-                    child: CachedNetworkImage(
-                      imageUrl: item.imageUrl,
-                      height: 180,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) =>
-                          Container(color: Colors.grey.shade200),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey.shade200,
-                        child: const Icon(Icons.error, color: Colors.red),
-                      ),
-                    ),
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
                   ),
+                  child: _buildCardImage(item.imageUrl),
+                ),
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
@@ -838,6 +922,20 @@ class _HomeScreenState extends State<HomeScreen> {
                               icon: const Icon(Icons.delete, color: Colors.red),
                               onPressed: () => _deleteItem(item.id),
                             ),
+                          ] else ...[
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                              label: const Text('Message', style: TextStyle(fontSize: 12)),
+                              onPressed: () => _startDirectChat(item),
+                            ),
                           ],
                         ],
                       ),
@@ -879,5 +977,43 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _startDirectChat(ItemModel item) async {
+    final currentUserId = _appService.currentUserId ?? _userId ?? '';
+    if (currentUserId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login to send message')),
+      );
+      return;
+    }
+    if (item.uploaderId == currentUserId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This is your own report')),
+      );
+      return;
+    }
+    final res = await _appService.createOrGetChat(
+      currentUserId: currentUserId,
+      otherUserId: item.uploaderId,
+      otherUserName: item.uploader,
+      itemId: item.id,
+      itemTitle: item.title,
+    );
+    final chatId = res['chatId']?.toString() ?? '';
+    if (mounted && chatId.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            chatId: chatId,
+            otherUserId: item.uploaderId,
+            otherUserName: item.uploader,
+            itemId: item.id,
+            itemTitle: item.title,
+          ),
+        ),
+      );
+    }
   }
 }

@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugDefaultTargetPlatform
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 // Services
 import './services/app_service.dart';
 
@@ -34,6 +36,9 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // App Service instance
 final AppService appService = AppService();
+
+// Global Theme Notifier for Dark/Light Mode
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
 
 // Initialize local notifications
 Future<void> _initializeLocalNotifications() async {
@@ -91,6 +96,11 @@ Future<void> main() async {
     print("🔄 Initializing App...");
     await _initializeLocalNotifications();
     await appService.initializeFCM();
+
+    final prefs = await SharedPreferences.getInstance();
+    final isDarkMode = prefs.getBool('settings_dark_mode') ?? false;
+    themeNotifier.value = isDarkMode ? ThemeMode.dark : ThemeMode.light;
+
     print("✅ App initialized successfully!");
 
     runApp(const MyApp());
@@ -208,192 +218,237 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      title: 'CUI Trace',
-      theme: ThemeData(
-        useMaterial3: true,
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.blue.shade50,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.blue,
-          elevation: 0,
-          centerTitle: true,
-          iconTheme: IconThemeData(color: Colors.white),
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, currentMode, child) {
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          title: 'CUI Trace',
+          themeMode: currentMode,
+          theme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.light,
+            primarySwatch: Colors.blue,
+            scaffoldBackgroundColor: Colors.blue.shade50,
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.blue,
+              elevation: 0,
+              centerTitle: true,
+              iconTheme: IconThemeData(color: Colors.white),
+              titleTextStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            cardTheme: CardThemeData(
+              color: Colors.white,
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
           ),
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-        ),
-      ),
-      initialRoute: '/splash',
-      routes: {
-        '/splash': (context) => const SplashScreen(),
-        '/onboarding': (context) => const OnboardingScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/signup': (context) => const SignupScreen(),
-        '/forgot_password': (context) => const ForgotPasswordScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/profile': (context) => const ProfileScreen(),
-        '/add_item': (context) => const AddItemScreen(),
-        '/detail': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments;
-          if (args is ItemModel) {
-            return ItemDetailScreen(item: args);
-          } else if (args is String && args.isNotEmpty) {
-            return FutureBuilder<ItemModel?>(
-              future: appService.getItemById(args),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Scaffold(
-                    appBar: AppBar(title: const Text('Item Details')),
-                    body: const Center(child: CircularProgressIndicator()),
-                  );
-                }
-                if (!snapshot.hasData || snapshot.data == null) {
-                  return Scaffold(
-                    appBar: AppBar(title: const Text('Item Not Found')),
-                    body: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.error_outline, size: 60, color: Colors.orange),
-                          const SizedBox(height: 16),
-                          const Text('Item not found or deleted', style: TextStyle(fontSize: 16)),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
-                            child: const Text('Return to Home'),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            primaryColor: Colors.blue,
+            colorScheme: const ColorScheme.dark(
+              primary: Colors.blue,
+              surface: Color(0xFF1E1E1E),
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFF1F1F1F),
+              elevation: 0,
+              centerTitle: true,
+              iconTheme: IconThemeData(color: Colors.white),
+              titleTextStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            cardTheme: CardThemeData(
+              color: const Color(0xFF1E1E1E),
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            drawerTheme: const DrawerThemeData(
+              backgroundColor: Color(0xFF1E1E1E),
+            ),
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+          ),
+          initialRoute: '/splash',
+          routes: {
+            '/splash': (context) => const SplashScreen(),
+            '/onboarding': (context) => const OnboardingScreen(),
+            '/login': (context) => const LoginScreen(),
+            '/signup': (context) => const SignupScreen(),
+            '/forgot_password': (context) => const ForgotPasswordScreen(),
+            '/home': (context) => const HomeScreen(),
+            '/profile': (context) => const ProfileScreen(),
+            '/add_item': (context) => const AddItemScreen(),
+            '/detail': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments;
+              if (args is ItemModel) {
+                return ItemDetailScreen(item: args);
+              } else if (args is String && args.isNotEmpty) {
+                return FutureBuilder<ItemModel?>(
+                  future: appService.getItemById(args),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Scaffold(
+                        appBar: AppBar(title: const Text('Item Details')),
+                        body: const Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (!snapshot.hasData || snapshot.data == null) {
+                      return Scaffold(
+                        appBar: AppBar(title: const Text('Item Not Found')),
+                        body: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.error_outline, size: 60, color: Colors.orange),
+                              const SizedBox(height: 16),
+                              const Text('Item not found or deleted', style: TextStyle(fontSize: 16)),
+                              const SizedBox(height: 20),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                                child: const Text('Return to Home'),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
+                      );
+                    }
+                    return ItemDetailScreen(item: snapshot.data!);
+                  },
+                );
+              }
+              return Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                      const SizedBox(height: 16),
+                      const Text('Item details not provided', style: TextStyle(fontSize: 16)),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                        child: const Text('Return to Home'),
                       ),
-                    ),
-                  );
-                }
-                return ItemDetailScreen(item: snapshot.data!);
-              },
-            );
-          }
-          return Scaffold(
-            appBar: AppBar(title: const Text('Error')),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
-                  const SizedBox(height: 16),
-                  const Text('Item details not provided', style: TextStyle(fontSize: 16)),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
-                    child: const Text('Return to Home'),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          );
-        },
-        '/edit_item': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments;
-          if (args is ItemModel) {
-            return EditItemScreen(item: args, itemId: args.id);
-          } else if (args is String && args.isNotEmpty) {
-            return EditItemScreen(itemId: args);
-          }
-          return Scaffold(
-            appBar: AppBar(title: const Text('Error')),
-            body: const Center(child: Text('Item not provided')),
-          );
-        },
-        '/verification': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments;
-          if (args is ItemModel) {
-            return VerificationScreen(item: args);
-          }
-          return Scaffold(
-            appBar: AppBar(title: const Text('Error')),
-            body: const Center(child: Text('Item not provided')),
-          );
-        },
-        '/chats': (context) => const ChatListScreen(),
-        '/notifications': (context) => const NotificationsScreen(),
-      },
-      onGenerateRoute: (settings) {
-        print('🔄 Generating route: ${settings.name}');
-        print('Arguments type: ${settings.arguments?.runtimeType}');
+                ),
+              );
+            },
+            '/edit_item': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments;
+              if (args is ItemModel) {
+                return EditItemScreen(item: args, itemId: args.id);
+              } else if (args is String && args.isNotEmpty) {
+                return EditItemScreen(itemId: args);
+              }
+              return Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: const Center(child: Text('Item not provided')),
+              );
+            },
+            '/verification': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments;
+              if (args is ItemModel) {
+                return VerificationScreen(item: args);
+              }
+              return Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: const Center(child: Text('Item not provided')),
+              );
+            },
+            '/chats': (context) => const ChatListScreen(),
+            '/notifications': (context) => const NotificationsScreen(),
+          },
+          onGenerateRoute: (settings) {
+            print('🔄 Generating route: ${settings.name}');
+            print('Arguments type: ${settings.arguments?.runtimeType}');
 
-        if (settings.name == '/chat') {
-          final args = settings.arguments as Map<String, dynamic>?;
+            if (settings.name == '/chat') {
+              final args = settings.arguments as Map<String, dynamic>?;
 
-          if (args == null) {
+              if (args == null) {
+                return MaterialPageRoute(
+                  builder: (context) => const ChatListScreen(),
+                );
+              }
+
+              return MaterialPageRoute(
+                builder: (context) => ChatScreen(
+                  chatId: args['chatId'] ?? '',
+                  otherUserId: args['otherUserId'] ?? '',
+                  otherUserName: args['otherUserName'] ?? 'Unknown User',
+                  itemId: args['itemId'],
+                  itemTitle: args['itemTitle'],
+                ),
+              );
+            }
+
+            if (settings.name?.startsWith('/item/') == true) {
+              final itemId = settings.name!.split('/').last;
+              return MaterialPageRoute(
+                builder: (context) => FutureBuilder<ItemModel?>(
+                  future: appService.getItemById(itemId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Scaffold(
+                        appBar: AppBar(title: const Text('Loading...')),
+                        body: const Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                      return Scaffold(
+                        appBar: AppBar(title: const Text('Item Not Found')),
+                        body: const Center(child: Text('Item not found or deleted')),
+                      );
+                    }
+                    return ItemDetailScreen(item: snapshot.data!);
+                  },
+                ),
+              );
+            }
+
             return MaterialPageRoute(
-              builder: (context) => const ChatListScreen(),
-            );
-          }
-
-          return MaterialPageRoute(
-            builder: (context) => ChatScreen(
-              chatId: args['chatId'] ?? '',
-              otherUserId: args['otherUserId'] ?? '',
-              otherUserName: args['otherUserName'] ?? 'Unknown User',
-              itemId: args['itemId'],
-              itemTitle: args['itemTitle'],
-            ),
-          );
-        }
-
-        if (settings.name?.startsWith('/item/') == true) {
-          final itemId = settings.name!.split('/').last;
-          return MaterialPageRoute(
-            builder: (context) => FutureBuilder<ItemModel?>(
-              future: appService.getItemById(itemId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Scaffold(
-                    appBar: AppBar(title: const Text('Loading...')),
-                    body: const Center(child: CircularProgressIndicator()),
-                  );
-                }
-                if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-                  return Scaffold(
-                    appBar: AppBar(title: const Text('Item Not Found')),
-                    body: const Center(child: Text('Item not found or deleted')),
-                  );
-                }
-                return ItemDetailScreen(item: snapshot.data!);
-              },
-            ),
-          );
-        }
-
-        return MaterialPageRoute(
-          builder: (context) => Scaffold(
-            appBar: AppBar(title: const Text('Page Not Found')),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Page not found: ${settings.name}',
-                    style: const TextStyle(fontSize: 18),
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Page Not Found')),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Page not found: ${settings.name}',
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pushNamed(context, '/home'),
+                        child: const Text('Go to Home'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pushNamed(context, '/home'),
-                    child: const Text('Go to Home'),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

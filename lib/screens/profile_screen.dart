@@ -1,5 +1,6 @@
 // screens/profile_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
@@ -55,6 +56,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'displayName': user.displayName,
               'email': user.email,
               'username': user.username,
+              'phoneNumber': user.phoneNumber,
+              'profileImage': user.profileImage,
               'createdAt': user.createdAt,
             };
             _userItems = items;
@@ -69,6 +72,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _userData = {
             'displayName': widget.targetUserName ?? 'User',
             'email': '',
+            'phoneNumber': '',
+            'profileImage': '',
             'createdAt': DateTime.now(),
           };
           _userItems = items;
@@ -96,6 +101,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await _loadUserData();
   }
 
+  ImageProvider? _getAvatarImage(String imagePath) {
+    if (imagePath.isEmpty) return null;
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return CachedNetworkImageProvider(imagePath);
+    }
+    final file = File(imagePath);
+    if (file.existsSync() || imagePath.startsWith('/')) {
+      return FileImage(file);
+    }
+    return null;
+  }
+
   Widget _buildProfileHeader() {
     final displayName =
         _userData?['displayName'] ?? widget.targetUserName ?? 'User';
@@ -105,6 +122,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final joinedDate = _userData?['createdAt'] is DateTime
         ? _userData!['createdAt'] as DateTime
         : DateTime.now();
+
+    final avatarProvider = _getAvatarImage(profileImage);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -123,9 +142,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           CircleAvatar(
             radius: 50,
             backgroundColor: Colors.blue.shade100,
-            backgroundImage:
-            profileImage.isNotEmpty ? CachedNetworkImageProvider(profileImage) : null,
-            child: profileImage.isEmpty
+            backgroundImage: avatarProvider,
+            child: avatarProvider == null
                 ? Icon(Icons.person, size: 50, color: Colors.blue.shade400)
                 : null,
           ),

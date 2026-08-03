@@ -15,8 +15,8 @@ class ApiConfig {
     if (kIsWeb) {
       return 'http://127.0.0.1:8000';
     } else if (Platform.isAndroid) {
-      // 192.168.18.35 is your PC local Wi-Fi IP address so physical mobile phone can reach backend
-      return 'http://192.168.18.35:8000';
+      // 192.168.100.22 is your PC local Wi-Fi IP address so physical mobile phone can reach backend
+      return 'http://192.168.100.22:8000';
     } else {
       return 'http://127.0.0.1:8000';
     }
